@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+li {
+    list-style-type: none;
+}
+
+@layer base {
+
+    h1 {
+        @apply text-5xl font-semibold my-4;
+    }
+
+    .form-control {
+        @apply max-w-[300px];
+    }
+
+    .form-control label {
+        @apply block text-slate-700 mb-1;
+    }
+
+    .form-control input, .form-control select{
+        @apply border border-gray-300 p-2 outline-none rounded-lg focus:ring ring-blue-500 focus:border-none;
+    }
+
+    .form-control select {
+        max-width: 200px;
+    }
+
+    .bg-1 {
+        background-image: url(https://images.pexels.com/photos/165505/pexels-photo-165505.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1);
+    }
+    .bg-2 {
+        background-image: url(https://images.pexels.com/photos/10348609/pexels-photo-10348609.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1);
+    }
+
+    .bg {
+        background-repeat: no-repeat;
+        background-size: cover;
+        background-position: center;
+        min-height: 100vh;
+    }
+
+
+
+}
