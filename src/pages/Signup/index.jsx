@@ -1,252 +1,228 @@
-import { useState, useEffect, useNaviagate } from "react";
-import {} from "react-router-dom"
+import { useState, useEffect } from "react";
 import axios from "axios";
 import validator from "validator";
-import {toast} from "react-toastify"
+import { toast } from "react-toastify";
 
 export default function Signup() {
+  const [nationality, setNationality] = useState([]);
+  const [formData, setFormData] = useState({
+    first_name: "",
+    last_name: "",
+    gender: "",
+    dob: "",
+    nationality: "",
+    email: "",
+    password: "",
+    confirm_password: "",
+  });
+  const [errors, setErrors] = useState({
+    first_name: "",
+    last_name: "",
+    gender: "",
+    dob: "",
+    nationality: "",
+    email: "",
+    password: "",
+    confirm_password: "",
+  });
 
-    // const navigate = useNaviagate()
+  useEffect(() => {
+    const endpoint = "https://restcountries.com/v3.1/all?fields=demonyms";
 
-    function verify() {
-        // verify all signup states and show error messages using validator
-        if (!validator.isEmail(formData.email)) {
-            toast.error("Please enter a valid email address")
-            return false
-        }
-        if (!formData.password) {
-            toast.error("Please enter a password")
-            return false
-        }
-        if (!formData.confirmPassword) {
-            toast.error("Please confirm your password")
-            return false
-        }
-        if (formData.password!== formdata.confirmPassword) {
-            toast.error("Passwords do not match")
-            return false
-        }
-        return true
+    fetch(endpoint)
+      .then((res) => res.json())
+      .then((data) => {
+        const nats = data.map((data) => data.demonyms.eng.m);
+        const uniqueNats = [...new Set(nats)].sort();
+        setNationality(uniqueNats);
+      });
+  }, []);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
+
+  const verify = () => {
+    const newErrors = {};
+    if (!validator.isEmail(formData.email)) {
+      newErrors.email = "Please enter a valid email address";
+    }
+    if (!formData.password) {
+      newErrors.password = "Please enter a password";
+    }
+    if (!formData.confirm_password) {
+      newErrors.confirm_password = "Please confirm your password";
+    }
+    if (formData.password !== formData.confirm_password) {
+      newErrors.confirm_password = "Passwords do not match";
     }
 
-    useEffect( () => {
-        const endpoint = "https://restcountries.com/v3.1/all?fields=demonyms"
+    setErrors({
+      ...errors,
+      ...newErrors,
+    });
 
-        fetch(endpoint)
-        .then( (res) => res.json())
-        .then( data =>  {
-            console.log(data)
+    return Object.values(newErrors).every((error) => error === "");
+  };
 
-            var nats = data.map( (data, index) => {
-                return data.demonyms.eng.m
-            })
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const isValid = verify();
+    if (!isValid) return;
 
-            //sort nats array pf strings by alphabetical order and remove duplicates
-            nats.sort()
-            nats = [...new Set(nats)]
-            console.log(nats)
-
-            console.log(nats)
-            setNationality(nats)
-
-        })
-
-        
-    }, [])
-
-    const [nationality, setNationality] = useState(null)
-
-    const [formData, setFormData] = useState({
-        first_name: "",
-        last_name: "",
-        gender: "",
-        dob: "",
-        nationality: "",
-        email: "",
-        password: "",
-        confirm_password: "",
-    })
-
-    const [errors, setErrors] = useState({
-        first_name: "",
-        last_name: "",
-        gender: "",
-        date_of_birth: "",
-        nationality: "",
-        email: "",
-    })
-
-    const handleChange = (e) => {
-        const {name, value} = e.target
-
-        console.log(formData)
-
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        })
+    const endpoint = "http://localhost:3000/api/users/register";
+    try {
+      const response = await axios.post(endpoint, formData);
+      localStorage.setItem("user", JSON.stringify(response.data));
+      toast.success("User registered successfully!");
+      // Redirect to login page or any other page you want
+    } catch (error) {
+      console.error("Error registering user:", error);
+      toast.error("An error occurred during registration. Please try again.");
     }
+  };
 
-    const handleSubmit = async (e) => {
+  return (
+    <div className="grid grid-cols-2">
+      <div action="" className="p-6 border">
+        <h1 className="text-3xl uppercase mb-4">Signup</h1>
+        <p className="mb-6">
+          Welcome! We are glad to have you join us. To get started, please
+          complete the form below.
+        </p>
+        <div className="grid grid-cols-2 gap-y-4">
+          <div className="form-control">
+            <label htmlFor="first_name">First Name</label>
+            <input
+              type="text"
+              placeholder="Dylan"
+              id="first_name"
+              name="first_name"
+              value={formData.first_name}
+              onChange={handleChange}
+            />
+            {errors.first_name && (
+              <p className="text-red-500 text-sm mt-1">{errors.first_name}</p>
+            )}
+          </div>
 
-        var res = verify()
+          <div className="form-control">
+            <label htmlFor="last_name">Last Name</label>
+            <input
+              type="text"
+              placeholder="Enter last_name"
+              id="last_name"
+              name="last_name"
+              value={formData.last_name}
+              onChange={handleChange}
+            />
+            {errors.last_name && (
+              <p className="text-red-500 text-sm mt-1">{errors.last_name}</p>
+            )}
+          </div>
 
-        if(res == false) return
-            e.preventDefault()
+          <div className="form-control">
+            <label htmlFor="email">Email Address</label>
+            <input
+              type="email"
+              placeholder="example@gmail.com"
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+            />
+            {errors.email && (
+              <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+            )}
+          </div>
 
-            const endpoint = "http://localhost:3000/register"
-            await axios.post(endpoint, formData, (response, err) => {
-                console.log(response)
-                localStorage.setItem('user', JSON.stringify(response))
-                if(err) {
-                    console.log(err)
-                }
-            })
+          <div className="form-control">
+            <label htmlFor="dob">Date Of Birth</label>
+            <input
+              type="date"
+              id="dob"
+              name="dob"
+              value={formData.dob}
+              onChange={handleChange}
+            />
+            {errors.dob && (
+              <p className="text-red-500 text-sm mt-1">{errors.dob}</p>
+            )}
+          </div>
 
-            // toast.success("User logged in successfully!")
-            // navigate('/login')
+          <div className="form-control">
+            <label htmlFor="gender">Gender</label>
+            <select name="gender" id="gender" onChange={handleChange}>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+            </select>
+            {errors.gender && (
+              <p className="text-red-500 text-sm mt-1">{errors.gender}</p>
+            )}
+          </div>
 
-    }
+          <div className="form-control">
+            <label htmlFor="nationality">Nationality</label>
+            <select name="nationality" id="nationality" onChange={handleChange}>
+              {nationality.map((nat, index) => (
+                <option value={nat} key={index}>
+                  {nat}
+                </option>
+              ))}
+            </select>
+            {errors.nationality && (
+              <p className="text-red-500 text-sm mt-1">{errors.nationality}</p>
+            )}
+          </div>
 
+          <div className="form-control">
+            <label htmlFor="password">Password</label>
+            <input
+              type="password"
+              name="password"
+              id="password"
+              value={formData.password}
+              onChange={handleChange}
+            />
+            {errors.password && (
+              <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+            )}
+          </div>
 
-
-
-
-    return(
-
-        <div className="grid grid-cols-2">
-
-        <div action="" className="p-6  border">
-            <h1 className="text-3xl uppercase mb-4">Signup</h1>
-
-            <p className="mb-6">Welcome! We glad to have you join us. <br />To get started please complete the form below.</p>
-            <div className=" grid grid-cols-2 gap-y-4 ">
-                <div className="form-control">
-                    <label htmlFor="first_name">First Name</label>
-                    <input 
-                        type="text"
-                        placeholder="Dylan"
-                        id="first_name"
-                        name="first_name"
-                        value={formData.first_name}
-                        onChange={handleChange}
-                    />
-                    {errors.username && <p className="text-red-500 text-sm mt-1">{errors.username}</p>}
-                </div>
-
-                <div className="form-control">
-                    <label htmlFor="last_name">Last Name</label>
-                    <input type="last_name" 
-                        placeholder="Enter last_name" 
-                        id="last_name" 
-                        name="last_name"
-                        value={formData.last_name}   
-                        onChange={handleChange}
-                    />
-                    {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
-
-                </div>
-
-                <div className="form-control">
-                    <label htmlFor="email">Email Address</label>
-                    <input type="email" 
-                        placeholder="example@gmail.com" 
-                        id="email" 
-                        name="email"
-                        value={formData.email}   
-                        onChange={handleChange}
-                    />
-                    {errors.password && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
-
-                </div>
-
-                <div className="form-control">
-                    <label htmlFor="dob">Date Of Birth</label>
-                    <input type="date" 
-                        // placeholder="Enter Password" 
-                        id="date" 
-                        name="dob"
-                        value={formData.date}   
-                        onChange={handleChange}
-                    />
-                    {errors.date && <p className="text-red-500 text-sm mt-1">{errors.date}</p>}
-
-                </div>
-
-                <div className="form-control">
-                    <label htmlFor="gender">Gender</label>
-
-                    <select name="gender" id="gender" onChange={handleChange}>
-                        <option value="Male">Male</option>    
-                        <option value="Male">Female</option>    
-                    </select> <br />
-                   
-                    {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
-
-                </div>
-
-                <div className="form-control">
-                    <label htmlFor="password">Nationality</label>
-
-                    <select name="nationality" id="" onChange={handleChange}>
-                        {
-                            nationality?.map( (nats, index) => {
-                                return <option value={nats} key={index}>{nats}</option>
-                            })
-                        }  
-                    </select> <br />
-                   
-                    {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
-
-                </div>
-
-                <div className="form-control">
-                    <label htmlFor="password">Password</label>
-
-                    <input type="password"
-                    name="password"
-                    id="password"
-                    value={formData.password}
-                    onChange={handleChange}
-
-                    />
-                   
-                    {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
-
-                </div>
-
-                <div className="form-control">
-                    <label htmlFor="confirmpassword">Confirm Password</label>
-
-                    <input type="password"
-                    name="confirm_password"
-                    id="confirmpassword"
-                    value={formData.confirm_password}
-                    onChange={handleChange}
-
-                    />
-                   
-                    {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
-
-                </div>
-                
-
-
-
-                
-           </div>
-
-           <button
-                    className="text-white font-bold uppercase bg-orange-600 px-4 py-2 rounded hover:bg-orange-500 hover:text-purple-900 transition mt-4"
-                    onClick={handleSubmit}
-                >
-                    SignUp
-                </button>
+          <div className="form-control">
+            <label htmlFor="confirm_password">Confirm Password</label>
+            <input
+              type="password"
+              name="confirm_password"
+              id="confirm_password"
+              value={formData.confirm_password}
+              onChange={handleChange}
+            />
+            {errors.confirm_password && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.confirm_password}
+              </p>
+            )}
+          </div>
         </div>
 
-        <img src="https://images.pexels.com/photos/2417863/pexels-photo-2417863.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" alt="" className="w-full hidden md:block"/>
-    </div>
-    )
+        <button
+          className="text-white font-bold uppercase bg-orange-600 px-4 py-2 rounded hover:bg-orange-500 hover:text-purple-900 transition mt-4"
+          onClick={handleSubmit}
+        >
+          SignUp
+        </button>
+      </div>
 
-    
+      <img
+        src="https://images.pexels.com/photos/2417863/pexels-photo-2417863.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+        alt=""
+        className="w-full hidden md:block"
+      />
+    </div>
+  );
 }
